@@ -45,8 +45,6 @@ while (!tamanoValido)
     }
 }
 
-
-
 // Seleccion de modo de busqueda 
 
 int modo = 0;
@@ -57,12 +55,30 @@ while (modo != 1 && modo != 2)
 }
 
 BuscadorArchivo buscador = new BuscadorArchivo();
+bool buscando = true;
+
+//Tarea para crear una animacion mientras el programa analiza las carpetas
+var tareaAnimacion = Task.Run(() =>
+{
+    string[] spinner = { "|", "/", "-", "\\" }; //Iconos para la animacion
+    int contadorAnimacion = 0; //Contador para iterar sobre los iconos
+
+    while (buscando)
+    {
+        Console.Write($"\r[{spinner[contadorAnimacion % 4]}] Cargando"); //Usamos \r para que sobrescriba el texto y simule una animacion
+        contadorAnimacion++;
+        Thread.Sleep(100); //Dormimos el hilo para la velocidad de la animacion
+    }
+});
+
 switch (modo)
 {
     case 1:
+        buscando = true;
         buscador.Paralelo(ruta, minBytes);
         break;
     case 2:
+        buscando = true;
         buscador.Secuencial(ruta, minBytes);
         break;
     default:
@@ -85,16 +101,29 @@ else
     MostrarDashboard(archivosOrdenados);
 }
 
-//Mostramos resultados
+//Metodo para mostrar los resultados de la busqueda 
 static void MostrarDashboard(List<FileInfo> archivos)
 {
+    //Formateamos lso datos en forma de tabla
+    Console.WriteLine($"\n{"#",-5} {"Tamaño",-12} {"Nombre",-40} {"Ruta"}");
+    Console.WriteLine(new string('─', 110));
 
-    foreach (var x in archivos)
+    for (int i = 0; i < archivos.Count; i++)
     {
-        Console.WriteLine($"Nombre: {x.Name}, Ruta: {x.FullName}, Tamaño: {FormatearTamano(x.Length)}\n");
+        var f = archivos[i];
+        string tamano = FormatearTamano(f.Length);
+        string nombre = f.Name.Length > 38 ? f.Name[..35] + "..." : f.Name; //Si el nombre es mayor a 38 caracteres solo tomamos hasta el 35
+        string rutaCorta = f.DirectoryName?.Length > 50 //Si la ruta es mayor a 50 caracteres tomamos los ultimos 47 
+            ? "..." + f.DirectoryName[^47..]
+            : f.DirectoryName ?? "";
+
+        Console.WriteLine($"{i + 1,-5} {tamano,-12} {nombre,-40} {rutaCorta}");
     }
+
+    Console.WriteLine(new string('─', 110));
 }
 
+//Metodo para convertir Bytes en GB, MB o KB
 static string FormatearTamano(long bytes)
 {
     return bytes switch
