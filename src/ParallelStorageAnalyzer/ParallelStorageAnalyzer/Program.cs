@@ -101,6 +101,12 @@ else
     MostrarDashboard(archivosOrdenados);
 }
 
+var detector = new DetectorDuplicados();
+var duplicados = detector.BuscarDuplicados(buscador.Archivos);
+
+Console.WriteLine("\nEscaneo completado. Presiona cualquier tecla para salir...");
+Console.ReadKey();
+
 //Metodo para mostrar los resultados de la busqueda 
 static void MostrarDashboard(List<FileInfo> archivos)
 {
@@ -172,14 +178,46 @@ public class BuscadorArchivo()
                 ProcesarCarpeta(subCarpeta.FullName, minBytes);
             });
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException ex)
         {
-
+            Console.WriteLine($"[Acceso denegado]: {ex.Message}");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-
+            Console.WriteLine($"[Error inesperado]: {ex.Message}");
         }
     }
 }
+
+
+
+
+
+
+
+    //clase para detectar archivos duplicados
+    public class DetectorDuplicados
+    {
+
+        public List<List<FileInfo>> BuscarDuplicados(IEnumerable<FileInfo> Archivos)
+        {
+            Console.WriteLine("Buscando archivos duplicados");
+
+            var resultados = new List<List<FileInfo>>();
+
+
+            var GruposPorTamano = Archivos
+                .GroupBy(a => a.Length)
+                .Where(g => g.Count() > 1);
+
+            foreach (var grupo in GruposPorTamano)
+            {
+
+                Console.WriteLine($"grupo tamaño: {grupo.Key}, cantidad: {grupo.Count()}");
+            }
+            return resultados;
+        }
+
+    }
+
 
