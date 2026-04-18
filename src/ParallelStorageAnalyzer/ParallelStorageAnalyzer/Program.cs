@@ -1,5 +1,7 @@
 ﻿
 using System.Collections.Concurrent;
+using System.Runtime.Intrinsics.Arm;
+using System.Security.Cryptography;
 
 //Validacion de Ruta
 
@@ -195,29 +197,46 @@ public class BuscadorArchivo()
 
 
 
-    //clase para detectar archivos duplicados
-    public class DetectorDuplicados
+//clase para detectar archivos duplicados
+public class DetectorDuplicados
+{
+    public List<List<FileInfo>> BuscarDuplicados(IEnumerable<FileInfo> Archivos)
     {
+        Console.WriteLine("Buscando archivos duplicados");
 
-        public List<List<FileInfo>> BuscarDuplicados(IEnumerable<FileInfo> Archivos)
+        var resultados = new List<List<FileInfo>>();
+
+        var GruposPorTamano = Archivos
+            .GroupBy(a => a.Length)
+            .Where(g => g.Count() > 1);
+
+        foreach (var grupo in GruposPorTamano)
         {
-            Console.WriteLine("Buscando archivos duplicados");
-
-            var resultados = new List<List<FileInfo>>();
-
-
-            var GruposPorTamano = Archivos
-                .GroupBy(a => a.Length)
+            var GruposPorHash = grupo
+                .GroupBy(a => ObtenerHash(a))
                 .Where(g => g.Count() > 1);
 
-            foreach (var grupo in GruposPorTamano)
+            foreach (var duplicados in GruposPorHash)
             {
+                Console.WriteLine("Archivos Duplicados:");
 
-                Console.WriteLine($"grupo tamaño: {grupo.Key}, cantidad: {grupo.Count()}");
+                foreach (var archivo in duplicados)
+                {
+                    Console.WriteLine(archivo.FullName);
+                }
             }
-            return resultados;
         }
 
+        return resultados;
     }
 
-
+    static string ObtenerHash(FileInfo archivo)
+    {
+        using (var sha256 = SHA256.Create())
+        using (var stream = archivo.OpenRead())
+        {
+            byte[] hash = sha256.ComputeHash(stream);
+            return BitConverter.ToString(hash);
+        }
+    }
+}
