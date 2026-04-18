@@ -1,48 +1,35 @@
 ﻿using System.Collections.Concurrent;
+using System.Security.Cryptography;
 
-bool continuar = true;
-string? rutaGuardada = null;
+string rutaElegida = "";
 
-while (continuar)
+bool continuarPrograma = true;
+List<FileInfo> archivosOrdenados = new List<FileInfo>();
+List<List<FileInfo>> duplicadosEncontrados = new List<List<FileInfo>>();
+
+while (continuarPrograma)
 {
+    // Validacion de ruta
     string ruta = "";
     bool rutaValida = false;
 
-    // Si ya hay una ruta guardada, preguntar si quiere usar la misma
-    if (rutaGuardada != null)
-    {
-        Console.Write($"\n¿Desea escanear la misma ruta anterior ({rutaGuardada})? (s/n): ");
-        string respuesta = Console.ReadLine()?.Trim().ToLower() ?? "";
-        if (respuesta == "s" || respuesta == "si" || respuesta == "sí")
-        {
-            ruta = rutaGuardada;
-            rutaValida = true;
-        }
-    }
-
-    // Validacion de Ruta
     while (!rutaValida)
     {
         Console.Write(@"Ingrese la ruta a escanear (ej: C:\Windows): ");
         ruta = Console.ReadLine()?.Trim() ?? "";
 
         if (string.IsNullOrWhiteSpace(ruta))
-        {
             Console.WriteLine("Error: La ruta no puede estar vacía.\n");
-        }
         else if (!Directory.Exists(ruta))
-        {
             Console.WriteLine("Error: La ruta no existe o no es accesible.\n");
-        }
         else
         {
             rutaValida = true;
+            rutaElegida = ruta;
         }
     }
 
-    rutaGuardada = ruta;
-
-    // Validacion de Tamaño
+    // Validacion de tamaño
     long minMB = 0;
     long minBytes = 0;
     bool tamanoValido = false;
@@ -56,12 +43,10 @@ while (continuar)
             tamanoValido = true;
         }
         else
-        {
             Console.WriteLine("Error: Ingrese un número entero positivo.\n");
-        }
     }
 
-    // Seleccion de modo de busqueda
+    // Seleccion de modo
     int modo = 0;
     while (modo != 1 && modo != 2)
     {
@@ -69,15 +54,14 @@ while (continuar)
         int.TryParse(Console.ReadLine(), out modo);
     }
 
+    // Animacion
     BuscadorArchivo buscador = new BuscadorArchivo();
     bool buscando = true;
 
-    // Tarea para crear una animacion mientras el programa analiza las carpetas
     var tareaAnimacion = Task.Run(() =>
     {
         string[] spinner = { "|", "/", "-", "\\" };
         int contadorAnimacion = 0;
-
         while (buscando)
         {
             Console.Write($"\r[{spinner[contadorAnimacion % 4]}] Cargando");
@@ -88,85 +72,204 @@ while (continuar)
 
     switch (modo)
     {
-        case 1:
-            buscando = true;
-            buscador.Paralelo(ruta, minBytes);
-            break;
-        case 2:
-            buscando = true;
-            buscador.Secuencial(ruta, minBytes);
-            break;
+        case 1: buscador.Paralelo(ruta, minBytes); break;
+        case 2: buscador.Secuencial(ruta, minBytes); break;
     }
 
     buscando = false;
     tareaAnimacion.Wait();
-    Console.Write("\r                    \r"); // Limpiar la línea del spinner
+    Console.Write("\r" + new string(' ', 20) + "\r");
 
-    // Ordenamos los archivos de mayor a menor
-    var archivosOrdenados = buscador.Archivos
+    // Dashboard
+    archivosOrdenados = buscador.Archivos
         .OrderByDescending(f => f.Length)
         .ToList();
 
     if (archivosOrdenados.Count == 0)
     {
         Console.WriteLine("No se encontraron archivos con el tamaño especificado.");
+        Console.Write("¿Deseas realizar otra búsqueda? (s/n): ");
+        string respuesta = Console.ReadLine()?.Trim().ToLower() ?? "n";
+        if (respuesta != "s") continuarPrograma = false;
+        continue;
     }
-    else
+
+    MostrarDashboard(archivosOrdenados);
+
+    // Detectar duplicados
+    var detector = new DetectorDuplicados();
+    duplicadosEncontrados = detector.BuscarDuplicados(buscador.Archivos);
+
+    // Menu despues de hacer una busqueda
+    bool enMenu = true;
+    while (enMenu)
     {
-        MostrarDashboard(archivosOrdenados);
+        Console.WriteLine("\n¿Qué deseas hacer?");
+        Console.WriteLine("  1. Buscar archivos de nuevo");
+        Console.WriteLine("  2. Eliminar un archivo");
 
-        // Menu post-busqueda
-        bool enMenu = true;
-        while (enMenu)
+        // Solo mostrar opcion 3 si hay duplicados
+        if (duplicadosEncontrados.Count > 0)
+            Console.WriteLine("  3. Eliminar archivos duplicados");
+
+        Console.WriteLine(duplicadosEncontrados.Count > 0 ? "  4. Salir" : "  3. Salir");
+        Console.Write("\nOpción: ");
+
+        string opcion = Console.ReadLine()?.Trim() ?? "";
+
+        bool esSalir = (duplicadosEncontrados.Count > 0 && opcion == "4") ||
+                       (duplicadosEncontrados.Count == 0 && opcion == "3");
+
+        bool esEliminarDuplicados = duplicadosEncontrados.Count > 0 && opcion == "3";
+
+        if (opcion == "1")
         {
-            Console.WriteLine("\n¿Qué desea hacer?");
-            Console.WriteLine(" 1. Eliminar un archivo");
-            Console.WriteLine(" 2. Nueva búsqueda");
-            Console.WriteLine(" 3. Salir");
-            Console.Write("\nOpción: ");
-
-            int opcion = 0;
-            int.TryParse(Console.ReadLine(), out opcion);
-
-            switch (opcion)
+            enMenu = false; // Vuelve al inicio del while principal para pedir nueva ruta
+        }
+        else if (opcion == "2")
+        {
+            EliminarArchivo(archivosOrdenados);
+            if (archivosOrdenados.Count > 0)
+                MostrarDashboard(archivosOrdenados);
+            else
             {
-                case 1:
-                    EliminarArchivo(archivosOrdenados);
-                    // Refrescar el dashboard después de eliminar
-                    var restantes = archivosOrdenados.Where(f => f.Exists).ToList();
-                    if (restantes.Count > 0)
-                        MostrarDashboard(restantes);
-                    else
-                        Console.WriteLine("\nNo quedan archivos en la lista.");
-                    break;
-
-                case 2:
-                    enMenu = false;     // Sale del menu
-                    break;
-
-                case 3:
-                    enMenu = false;
-                    continuar = false;  // Sale del bucle principal
-                    break;
-
-                default:
-                    Console.WriteLine("Opción no válida. Intente de nuevo.");
-                    break;
+                Console.WriteLine("No quedan archivos en la lista.");
+                enMenu = false;
+                continuarPrograma = false;
             }
         }
-    }
-
-    // Si no había archivos, preguntar si quiere salir o buscar de nuevo
-    if (archivosOrdenados.Count == 0)
-    {
-        Console.Write("\n¿Desea realizar una nueva búsqueda? (s/n): ");
-        string respuesta = Console.ReadLine()?.Trim().ToLower() ?? "";
-        continuar = respuesta == "s" || respuesta == "si" || respuesta == "sí";
+        else if (esEliminarDuplicados)
+        {
+            EliminarDuplicados(duplicadosEncontrados, archivosOrdenados);
+            if (archivosOrdenados.Count > 0)
+                MostrarDashboard(archivosOrdenados);
+            else
+            {
+                Console.WriteLine("No quedan archivos en la lista.");
+                enMenu = false;
+                continuarPrograma = false;
+            }
+        }
+        else if (esSalir)
+        {
+            enMenu = false;
+            continuarPrograma = false;
+        }
+        else
+        {
+            Console.WriteLine("Opción no válida.");
+        }
     }
 }
 
-Console.WriteLine("\nHasta luego.");
+Console.WriteLine("\nPrograma finalizado. Presiona cualquier tecla para salir...");
+Console.ReadKey();
 
+
+// Eliminar archivo
+static void EliminarArchivo(List<FileInfo> archivos)
+{
+    Console.WriteLine("\n╔══════════════════════════════════════════════╗");
+    Console.WriteLine("║              ELIMINACIÓN DE ARCHIVO          ║");
+    Console.WriteLine("╚══════════════════════════════════════════════╝");
+
+    Console.Write($"\nIngresa el # del archivo a eliminar (1-{archivos.Count}): ");
+
+    if (!int.TryParse(Console.ReadLine(), out int numero) || numero < 1 || numero > archivos.Count)
+    {
+        Console.WriteLine("Número inválido. No se eliminó ningún archivo.");
+        return;
+    }
+
+    var archivo = archivos[numero - 1];
+
+    Console.WriteLine($"\nArchivo seleccionado : {archivo.FullName}");
+    Console.WriteLine($"Tamaño               : {FormatearTamano(archivo.Length)}");
+    Console.Write("¿Confirmas la eliminación? Esta acción es irreversible. (s/n): ");
+
+    if (Console.ReadLine()?.Trim().ToLower() == "s")
+    {
+        try
+        {
+            archivo.Delete();
+            archivos.RemoveAt(numero - 1);
+            Console.WriteLine("✓ Archivo eliminado exitosamente.");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            Console.WriteLine("✗ Error: No tienes permisos para eliminar este archivo.");
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine($"✗ Error de E/S: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"✗ Error inesperado: {ex.Message}");
+        }
+    }
+    else
+    {
+        Console.WriteLine("Eliminación cancelada.");
+    }
+}
+
+static void EliminarDuplicados(List<List<FileInfo>> duplicados, List<FileInfo> archivosOrdenados)
+{
+    Console.WriteLine("\n╔══════════════════════════════════════════════════════════════╗");
+    Console.WriteLine("║              ELIMINACIÓN DE ARCHIVOS DUPLICADOS             ║");
+    Console.WriteLine("╚══════════════════════════════════════════════════════════════╝");
+
+    int grupoNum = 1;
+    foreach (var grupo in duplicados)
+    {
+        Console.WriteLine($"\nGrupo {grupoNum++} ({grupo.Count} archivos idénticos):");
+        Console.WriteLine($"  {"#",-4} {"Tamaño",-12} {"Ruta completa"}");
+        Console.WriteLine("  " + new string('─', 80));
+
+        for (int i = 0; i < grupo.Count; i++)
+        {
+            Console.WriteLine($"  {i + 1,-4} {FormatearTamano(grupo[i].Length),-12} {grupo[i].FullName}");
+        }
+
+        Console.WriteLine($"\n  Se conservará el archivo #1 y se eliminarán los demás ({grupo.Count - 1} archivo/s).");
+        Console.Write("  ¿Eliminar duplicados de este grupo? (s/n): ");
+
+        if (Console.ReadLine()?.Trim().ToLower() != "s")
+        {
+            Console.WriteLine("  Grupo omitido.");
+            continue;
+        }
+
+        // Conservamos el primero, eliminamos el resto
+        for (int i = 1; i < grupo.Count; i++)
+        {
+            try
+            {
+                var archivo = grupo[i];
+                archivo.Delete();
+                archivosOrdenados.RemoveAll(f => f.FullName == archivo.FullName);
+                Console.WriteLine($"  ✓ Eliminado: {archivo.FullName}");
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.WriteLine($"  ✗ Sin permisos: {grupo[i].FullName}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"  ✗ Error: {ex.Message}");
+            }
+        }
+
+        // Limpiamos el grupo para que no vuelva a aparecer
+        grupo.RemoveRange(1, grupo.Count - 1);
+    }
+
+    // Quitamos grupos que ya no tienen duplicados
+    duplicados.RemoveAll(g => g.Count <= 1);
+
+    Console.WriteLine("\nProceso de eliminación de duplicados completado.");
+}
 
 static void MostrarDashboard(List<FileInfo> archivos)
 {
@@ -184,57 +287,8 @@ static void MostrarDashboard(List<FileInfo> archivos)
 
         Console.WriteLine($"{i + 1,-5} {tamano,-12} {nombre,-40} {rutaCorta}");
     }
-}
 
-static void EliminarArchivo(List<FileInfo> archivos)
-{
-    // Filtramos solo los que aun existen en disco
-    var disponibles = archivos.Where(f => f.Exists).ToList();
-
-    if (disponibles.Count == 0)
-    {
-        Console.WriteLine("No hay archivos disponibles para eliminar.");
-        return;
-    }
-
-    Console.Write($"\nIngrese el # del archivo a eliminar (1-{disponibles.Count}): ");
-
-    if (!int.TryParse(Console.ReadLine(), out int numero) || numero < 1 || numero > disponibles.Count)
-    {
-        Console.WriteLine("Número inválido. Operación cancelada.");
-        return;
-    }
-
-    // El # en pantalla corresponde al índice original en archivos, no en disponibles,
-    // así que buscamos por posición visual 
-    FileInfo archivo = disponibles[numero - 1];
-
-    Console.WriteLine($"\nArchivo seleccionado: {archivo.FullName}");
-    Console.WriteLine($"Tamaño: {FormatearTamano(archivo.Length)}");
-    Console.Write("¿Está seguro que desea eliminar este archivo? (s/n): ");
-
-    string confirmacion = Console.ReadLine()?.Trim().ToLower() ?? "";
-
-    if (confirmacion == "s" || confirmacion == "si" || confirmacion == "sí")
-    {
-        try
-        {
-            archivo.Delete();
-            Console.WriteLine("✓ Archivo eliminado correctamente.");
-        }
-        catch (UnauthorizedAccessException)
-        {
-            Console.WriteLine("Error: No tiene permisos para eliminar este archivo.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error al eliminar: {ex.Message}");
-        }
-    }
-    else
-    {
-        Console.WriteLine("Operación cancelada.");
-    }
+    Console.WriteLine(new string('─', 110));
 }
 
 static string FormatearTamano(long bytes)
@@ -265,7 +319,6 @@ public class BuscadorArchivo()
         try
         {
             DirectoryInfo directoryInfo = new DirectoryInfo(ruta);
-
             foreach (var archivo in directoryInfo.GetFiles())
             {
                 if (archivo.Length >= minBytes)
@@ -278,7 +331,57 @@ public class BuscadorArchivo()
                 ProcesarCarpeta(subCarpeta.FullName, minBytes);
             });
         }
-        catch (UnauthorizedAccessException) { }
-        catch (Exception) { }
+        catch (UnauthorizedAccessException ex)
+        {
+            Console.WriteLine($"[Acceso denegado]: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Error inesperado]: {ex.Message}");
+        }
+    }
+}
+
+public class DetectorDuplicados
+{
+    public List<List<FileInfo>> BuscarDuplicados(IEnumerable<FileInfo> Archivos)
+    {
+        Console.WriteLine("\nBuscando archivos duplicados...");
+
+        var resultados = new List<List<FileInfo>>();
+
+        var GruposPorTamano = Archivos
+            .GroupBy(a => a.Length)
+            .Where(g => g.Count() > 1);
+
+        foreach (var grupo in GruposPorTamano)
+        {
+            var GruposPorHash = grupo
+                .GroupBy(a => ObtenerHash(a))
+                .Where(g => g.Count() > 1);
+
+            foreach (var duplicados in GruposPorHash)
+            {
+                var lista = duplicados.ToList();
+                resultados.Add(lista);
+
+                Console.WriteLine($"  ↳ {lista.Count} copias de: {lista[0].Name}");
+            }
+        }
+
+        if (resultados.Count == 0)
+            Console.WriteLine("  No se encontraron duplicados.");
+        else
+            Console.WriteLine($"  Total: {resultados.Count} grupo(s) de duplicados encontrados.");
+
+        return resultados;
+    }
+
+    static string ObtenerHash(FileInfo archivo)
+    {
+        using var sha256 = SHA256.Create();
+        using var stream = archivo.OpenRead();
+        byte[] hash = sha256.ComputeHash(stream);
+        return BitConverter.ToString(hash);
     }
 }
