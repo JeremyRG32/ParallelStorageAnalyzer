@@ -15,6 +15,9 @@ while (continuarPrograma)
     string ruta = ConsoleUI.PedirRuta();
     long minBytes = ConsoleUI.PedirTamano();
     int modo = ConsoleUI.PedirModo();
+    ModoEjecucion modoSeleccionado = (modo == 1)
+     ? ModoEjecucion.Paralelo
+     : ModoEjecucion.Secuencial;
 
     // Busqueda con Animación
     ResultadoBusqueda resultado = null!;
@@ -38,7 +41,7 @@ while (continuarPrograma)
 
 
     // Detectar duplicados
-    duplicadosEncontrados = detector.BuscarDuplicados(resultado.Archivos);
+    duplicadosEncontrados = detector.BuscarDuplicados(resultado.Archivos, modoSeleccionado);
 
     // Menu despues de hacer una busqueda
     bool enMenu = true;
