@@ -1,0 +1,15 @@
+C:\Users\Eidan\Desktop\Programacion Paralela\Proyecto Final\src\ParallelStorageAnalyzer\ParallelStorageAnalyzer\bin\Debug\net8.0\ParallelStorageAnalyzer.exe
+C:\Users\Eidan\Desktop\Programacion Paralela\Proyecto Final\src\ParallelStorageAnalyzer\ParallelStorageAnalyzer\bin\Debug\net8.0\ParallelStorageAnalyzer.deps.json
+C:\Users\Eidan\Desktop\Programacion Paralela\Proyecto Final\src\ParallelStorageAnalyzer\ParallelStorageAnalyzer\bin\Debug\net8.0\ParallelStorageAnalyzer.runtimeconfig.json
+C:\Users\Eidan\Desktop\Programacion Paralela\Proyecto Final\src\ParallelStorageAnalyzer\ParallelStorageAnalyzer\bin\Debug\net8.0\ParallelStorageAnalyzer.dll
+C:\Users\Eidan\Desktop\Programacion Paralela\Proyecto Final\src\ParallelStorageAnalyzer\ParallelStorageAnalyzer\bin\Debug\net8.0\ParallelStorageAnalyzer.pdb
+C:\Users\Eidan\Desktop\Programacion Paralela\Proyecto Final\src\ParallelStorageAnalyzer\ParallelStorageAnalyzer\obj\Debug\net8.0\ParallelStorageAnalyzer.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Eidan\Desktop\Programacion Paralela\Proyecto Final\src\ParallelStorageAnalyzer\ParallelStorageAnalyzer\obj\Debug\net8.0\ParallelStorageAnalyzer.AssemblyInfoInputs.cache
+C:\Users\Eidan\Desktop\Programacion Paralela\Proyecto Final\src\ParallelStorageAnalyzer\ParallelStorageAnalyzer\obj\Debug\net8.0\ParallelStorageAnalyzer.AssemblyInfo.cs
+C:\Users\Eidan\Desktop\Programacion Paralela\Proyecto Final\src\ParallelStorageAnalyzer\ParallelStorageAnalyzer\obj\Debug\net8.0\ParallelStorageAnalyzer.csproj.CoreCompileInputs.cache
+C:\Users\Eidan\Desktop\Programacion Paralela\Proyecto Final\src\ParallelStorageAnalyzer\ParallelStorageAnalyzer\obj\Debug\net8.0\ParallelStorageAnalyzer.sourcelink.json
+C:\Users\Eidan\Desktop\Programacion Paralela\Proyecto Final\src\ParallelStorageAnalyzer\ParallelStorageAnalyzer\obj\Debug\net8.0\ParallelStorageAnalyzer.dll
+C:\Users\Eidan\Desktop\Programacion Paralela\Proyecto Final\src\ParallelStorageAnalyzer\ParallelStorageAnalyzer\obj\Debug\net8.0\refint\ParallelStorageAnalyzer.dll
+C:\Users\Eidan\Desktop\Programacion Paralela\Proyecto Final\src\ParallelStorageAnalyzer\ParallelStorageAnalyzer\obj\Debug\net8.0\ParallelStorageAnalyzer.pdb
+C:\Users\Eidan\Desktop\Programacion Paralela\Proyecto Final\src\ParallelStorageAnalyzer\ParallelStorageAnalyzer\obj\Debug\net8.0\ParallelStorageAnalyzer.genruntimeconfig.cache
+C:\Users\Eidan\Desktop\Programacion Paralela\Proyecto Final\src\ParallelStorageAnalyzer\ParallelStorageAnalyzer\obj\Debug\net8.0\ref\ParallelStorageAnalyzer.dll
