@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Eidan\\Desktop\\Programacion Paralela\\Proyecto Final\\src\\ParallelStorageAnalyzer\\ParallelStorageAnalyzer\\ParallelStorageAnalyzer.csproj": {}
+    "C:\\Users\\Eidan\\Desktop\\Programacion Paralela\\Proyecto Final\\ParallelStorageAnalyzer\\ParallelStorageAnalyzer.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Eidan\\Desktop\\Programacion Paralela\\Proyecto Final\\src\\ParallelStorageAnalyzer\\ParallelStorageAnalyzer\\ParallelStorageAnalyzer.csproj": {
+    "C:\\Users\\Eidan\\Desktop\\Programacion Paralela\\Proyecto Final\\ParallelStorageAnalyzer\\ParallelStorageAnalyzer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Eidan\\Desktop\\Programacion Paralela\\Proyecto Final\\src\\ParallelStorageAnalyzer\\ParallelStorageAnalyzer\\ParallelStorageAnalyzer.csproj",
+        "projectUniqueName": "C:\\Users\\Eidan\\Desktop\\Programacion Paralela\\Proyecto Final\\ParallelStorageAnalyzer\\ParallelStorageAnalyzer.csproj",
         "projectName": "ParallelStorageAnalyzer",
-        "projectPath": "C:\\Users\\Eidan\\Desktop\\Programacion Paralela\\Proyecto Final\\src\\ParallelStorageAnalyzer\\ParallelStorageAnalyzer\\ParallelStorageAnalyzer.csproj",
+        "projectPath": "C:\\Users\\Eidan\\Desktop\\Programacion Paralela\\Proyecto Final\\ParallelStorageAnalyzer\\ParallelStorageAnalyzer.csproj",
         "packagesPath": "C:\\Users\\Eidan\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Eidan\\Desktop\\Programacion Paralela\\Proyecto Final\\src\\ParallelStorageAnalyzer\\ParallelStorageAnalyzer\\obj\\",
+        "outputPath": "C:\\Users\\Eidan\\Desktop\\Programacion Paralela\\Proyecto Final\\ParallelStorageAnalyzer\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
