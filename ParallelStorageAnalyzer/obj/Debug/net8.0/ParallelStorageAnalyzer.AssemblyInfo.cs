@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ParallelStorageAnalyzer")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3caa2e0b37ee487f9312b149666067931eb2148c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f9cfd9a15e9025057ae965d11c1e32a66cdf9bf0")]
 [assembly: System.Reflection.AssemblyProductAttribute("ParallelStorageAnalyzer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ParallelStorageAnalyzer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
