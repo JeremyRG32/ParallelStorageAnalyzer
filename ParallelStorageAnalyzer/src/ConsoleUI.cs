@@ -64,24 +64,22 @@
             }
 
             Console.WriteLine(new string('─', 110));
-            Console.WriteLine($"Tiempo de ejecucion: {resultado.TiempoMs / 1000}s");
-            Console.WriteLine($"Modo de ejecución: {resultado.ModoNombre}");
         }
 
         // Dashboard archivos duplicados
-        public static void MostrarDashboardDuplicados(List<List<FileInfo>> grupos, long tiempoMs, ModoEjecucion modo)
+        public static void MostrarDashboardDuplicados(ResultadoBusqueda resultado)
         {
-            Console.WriteLine($"\nBúsqueda de duplicados ({modo}): {tiempoMs} ms");
+            Console.WriteLine($"\n\nTiempo de ejecucion ({resultado.ModoNombre}): {resultado.TiempoMs}ms");
 
-            if (grupos.Count == 0)
+            if (resultado.Duplicados.Count == 0)
             {
                 Console.WriteLine("No se encontraron duplicados.");
                 return;
             }
 
-            Console.WriteLine($"Total: {grupos.Count} grupo(s) de duplicados encontrados.");
+            Console.WriteLine($"Total: {resultado.Duplicados.Count} grupo(s) de duplicados encontrados.");
 
-            foreach (var grupo in grupos)
+            foreach (var grupo in resultado.Duplicados)
                 Console.WriteLine($"  ↳ {grupo.Count} copias de: {grupo[0].Name}");
         }
 

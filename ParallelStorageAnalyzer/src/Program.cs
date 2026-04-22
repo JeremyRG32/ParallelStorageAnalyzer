@@ -12,9 +12,6 @@ while (continuarPrograma)
     string ruta = ConsoleUI.PedirRuta();
     long minBytes = ConsoleUI.PedirTamano();
     int modo = ConsoleUI.PedirModo();
-    ModoEjecucion modoSeleccionado = (modo == 1)
-     ? ModoEjecucion.Paralelo
-     : ModoEjecucion.Secuencial;
 
     // Busqueda con Animación
     ResultadoBusqueda resultado = null!;
@@ -38,29 +35,26 @@ while (continuarPrograma)
 
 
     // Detectar duplicados
-    List<List<FileInfo>> duplicados = null!;
-    long tiempoHash = 0;
-
     await ConsoleUI.MostrarSpinner(async () =>
     {
         await Task.Run(() =>
         {
-            (duplicados, tiempoHash) = detector.BuscarDuplicados(resultado.Archivos, modoSeleccionado);
+            detector.BuscarDuplicados(resultado);
         });
     }, "Buscando Duplicados...");
 
-    ConsoleUI.MostrarDashboardDuplicados(duplicados, tiempoHash, modoSeleccionado);
+    ConsoleUI.MostrarDashboardDuplicados(resultado);
 
     // Menu despues de hacer una busqueda
     bool enMenu = true;
     while (enMenu)
     {
-        var opcion = ConsoleUI.PedirOpcionMenu(duplicados.Count > 0);
+        var opcion = ConsoleUI.PedirOpcionMenu(resultado.Duplicados.Count > 0);
 
-        bool esSalir = (duplicados.Count > 0 && opcion == 4) ||
-                       (duplicados.Count == 0 && opcion == 3);
+        bool esSalir = (resultado.Duplicados.Count > 0 && opcion == 4) ||
+                       (resultado.Duplicados.Count == 0 && opcion == 3);
 
-        bool esEliminarDuplicados = duplicados.Count > 0 && opcion == 3;
+        bool esEliminarDuplicados = resultado.Duplicados.Count > 0 && opcion == 3;
 
         if (opcion == 1)
         {
@@ -80,7 +74,7 @@ while (continuarPrograma)
         }
         else if (esEliminarDuplicados)
         {
-            ConsoleUI.EliminarDuplicados(duplicados, resultado.Archivos);
+            ConsoleUI.EliminarDuplicados(resultado.Duplicados, resultado.Archivos);
             if (resultado.Archivos.Count > 0)
                 ConsoleUI.MostrarDashboard(resultado);
             else

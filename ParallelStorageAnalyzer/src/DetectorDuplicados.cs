@@ -4,33 +4,24 @@ using System.Security.Cryptography;
 
 namespace ParallelStorageAnalyzer
 {
-    public enum ModoEjecucion
-    {
-        Secuencial,
-        Paralelo
-    }
-
     public class DetectorDuplicados
     {
-        public (List<List<FileInfo>> Grupos, long TiempoMs) BuscarDuplicados(IEnumerable<FileInfo> archivos, ModoEjecucion modo)
+        public void BuscarDuplicados(ResultadoBusqueda resultado)
         {
 
             var sw = Stopwatch.StartNew();
 
-            List<List<FileInfo>> resultados;
-
-            if (modo == ModoEjecucion.Secuencial)
+            if (resultado.Modo == 2)
             {
-                resultados = BuscarSecuencial(archivos);
+                resultado.Duplicados = BuscarSecuencial(resultado.Archivos);
             }
             else
             {
-                resultados = BuscarParalelo(archivos);
+                resultado.Duplicados = BuscarParalelo(resultado.Archivos);
             }
 
             sw.Stop();
-
-            return (resultados, sw.ElapsedMilliseconds);
+            resultado.TiempoMs += sw.ElapsedMilliseconds;
         }
 
         private List<List<FileInfo>> BuscarSecuencial(IEnumerable<FileInfo> archivos)
