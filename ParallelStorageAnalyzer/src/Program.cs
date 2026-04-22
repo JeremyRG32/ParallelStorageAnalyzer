@@ -61,7 +61,7 @@ while (continuarPrograma)
         else if (opcion == 2)
         {
             ConsoleUI.EliminarArchivo(resultado.Archivos);
-            if (archivosOrdenados.Count > 0)
+            if (resultado.Archivos.Count > 0)
                 ConsoleUI.MostrarDashboard(resultado);
             else
             {
