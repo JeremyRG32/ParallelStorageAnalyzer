@@ -69,8 +69,6 @@
         // Dashboard archivos duplicados
         public static void MostrarDashboardDuplicados(ResultadoBusqueda resultado)
         {
-            Console.WriteLine($"\n\nTiempo de ejecucion ({resultado.ModoNombre}): {resultado.TiempoMs}ms");
-
             if (resultado.Duplicados.Count == 0)
             {
                 Console.WriteLine("No se encontraron duplicados.");
@@ -81,6 +79,8 @@
 
             foreach (var grupo in resultado.Duplicados)
                 Console.WriteLine($"  ↳ {grupo.Count} copias de: {grupo[0].Name}");
+
+            Console.WriteLine($"\n\nTiempo de ejecucion ({resultado.ModoNombre}): {resultado.TiempoMs}ms");
         }
 
 

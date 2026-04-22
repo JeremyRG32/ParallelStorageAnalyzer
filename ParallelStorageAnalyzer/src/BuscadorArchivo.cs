@@ -55,11 +55,11 @@ namespace ParallelStorageAnalyzer
             }
             catch (UnauthorizedAccessException ex)
             {
-                Console.WriteLine($"[Acceso denegado]: {ex.Message}");
+                Console.WriteLine($"\n[Acceso denegado]: {ex.Message}\n");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Error inesperado]: {ex.Message}");
+                Console.WriteLine($"\n[Error inesperado]: {ex.Message}\n");
             }
         }
 
@@ -89,11 +89,11 @@ namespace ParallelStorageAnalyzer
             }
             catch (UnauthorizedAccessException ex)
             {
-                Console.WriteLine($"[Acceso denegado]: {ex.Message}");
+                Console.WriteLine($"\n[Acceso denegado]: {ex.Message}\n");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Error inesperado]: {ex.Message}");
+                Console.WriteLine($"\n[Error inesperado]: {ex.Message}\n");
             }
         }
     }

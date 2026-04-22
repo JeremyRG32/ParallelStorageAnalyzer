@@ -36,7 +36,7 @@ namespace ParallelStorageAnalyzer
             {
                 var gruposPorHash = grupo
                     .GroupBy(a => ObtenerHash(a))
-                    .Where(g => g.Count() > 1);
+                    .Where(g => !string.IsNullOrEmpty(g.Key) && g.Count() > 1);
 
                 foreach (var duplicados in gruposPorHash)
                 {
@@ -69,7 +69,9 @@ namespace ParallelStorageAnalyzer
                 {
                     string hash = ObtenerHash(archivo);
 
-                    diccionario.AddOrUpdate(
+                    if (!string.IsNullOrEmpty(hash))
+                    {
+                        diccionario.AddOrUpdate(
                         hash,
                         new List<FileInfo> { archivo },
                         (key, listaExistente) =>
@@ -80,6 +82,7 @@ namespace ParallelStorageAnalyzer
                             }
                             return listaExistente;
                         });
+                    }
                 });
 
                 foreach (var kvp in diccionario.Where(x => x.Value.Count > 1))
@@ -93,10 +96,24 @@ namespace ParallelStorageAnalyzer
 
         private static string ObtenerHash(FileInfo archivo)
         {
-            using var sha256 = SHA256.Create();
-            using var stream = archivo.OpenRead();
-            byte[] hash = sha256.ComputeHash(stream);
-            return BitConverter.ToString(hash);
+            try
+            {
+                using var sha256 = SHA256.Create();
+                using var stream = archivo.OpenRead();
+                byte[] hash = sha256.ComputeHash(stream);
+                return BitConverter.ToString(hash);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.WriteLine($"\n[Acceso denegado]: {archivo.FullName}\n");
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"\n[Error inesperado]: {ex.Message}\n");
+                return string.Empty;
+            }
+
         }
     }
 }
