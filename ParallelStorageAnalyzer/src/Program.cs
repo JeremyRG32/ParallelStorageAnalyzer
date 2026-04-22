@@ -6,9 +6,6 @@ bool continuarPrograma = true;
 var buscador = new BuscadorArchivo();
 var detector = new DetectorDuplicados();
 
-List<FileInfo> archivosOrdenados = new List<FileInfo>();
-List<List<FileInfo>> duplicadosEncontrados = new List<List<FileInfo>>();
-
 while (continuarPrograma)
 {
     // Inputs
@@ -24,7 +21,7 @@ while (continuarPrograma)
     await ConsoleUI.MostrarSpinner(async () =>
     {
         await Task.Run(() => resultado = buscador.Buscar(ruta, minBytes, modo));
-    });
+    }, "Buscando Archivos...");
 
 
     if (resultado.Archivos.Count == 0)
@@ -41,18 +38,29 @@ while (continuarPrograma)
 
 
     // Detectar duplicados
-    duplicadosEncontrados = detector.BuscarDuplicados(resultado.Archivos, modoSeleccionado);
+    List<List<FileInfo>> duplicados = null!;
+    long tiempoHash = 0;
+
+    await ConsoleUI.MostrarSpinner(async () =>
+    {
+        await Task.Run(() =>
+        {
+            (duplicados, tiempoHash) = detector.BuscarDuplicados(resultado.Archivos, modoSeleccionado);
+        });
+    }, "Buscando Duplicados...");
+
+    ConsoleUI.MostrarDashboardDuplicados(duplicados, tiempoHash, modoSeleccionado);
 
     // Menu despues de hacer una busqueda
     bool enMenu = true;
     while (enMenu)
     {
-        var opcion = ConsoleUI.PedirOpcionMenu(duplicadosEncontrados.Count > 0);
+        var opcion = ConsoleUI.PedirOpcionMenu(duplicados.Count > 0);
 
-        bool esSalir = (duplicadosEncontrados.Count > 0 && opcion == 4) ||
-                       (duplicadosEncontrados.Count == 0 && opcion == 3);
+        bool esSalir = (duplicados.Count > 0 && opcion == 4) ||
+                       (duplicados.Count == 0 && opcion == 3);
 
-        bool esEliminarDuplicados = duplicadosEncontrados.Count > 0 && opcion == 3;
+        bool esEliminarDuplicados = duplicados.Count > 0 && opcion == 3;
 
         if (opcion == 1)
         {
@@ -61,7 +69,7 @@ while (continuarPrograma)
         else if (opcion == 2)
         {
             ConsoleUI.EliminarArchivo(resultado.Archivos);
-            if (archivosOrdenados.Count > 0)
+            if (resultado.Archivos.Count > 0)
                 ConsoleUI.MostrarDashboard(resultado);
             else
             {
@@ -72,8 +80,8 @@ while (continuarPrograma)
         }
         else if (esEliminarDuplicados)
         {
-            ConsoleUI.EliminarDuplicados(duplicadosEncontrados, archivosOrdenados);
-            if (archivosOrdenados.Count > 0)
+            ConsoleUI.EliminarDuplicados(duplicados, resultado.Archivos);
+            if (resultado.Archivos.Count > 0)
                 ConsoleUI.MostrarDashboard(resultado);
             else
             {

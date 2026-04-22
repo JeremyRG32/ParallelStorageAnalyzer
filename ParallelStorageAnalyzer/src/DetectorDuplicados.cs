@@ -12,11 +12,10 @@ namespace ParallelStorageAnalyzer
 
     public class DetectorDuplicados
     {
-        public List<List<FileInfo>> BuscarDuplicados(IEnumerable<FileInfo> archivos, ModoEjecucion modo)
+        public (List<List<FileInfo>> Grupos, long TiempoMs) BuscarDuplicados(IEnumerable<FileInfo> archivos, ModoEjecucion modo)
         {
-            Console.WriteLine("\nBuscando archivos duplicados...");
 
-            var sw = Stopwatch.StartNew(); 
+            var sw = Stopwatch.StartNew();
 
             List<List<FileInfo>> resultados;
 
@@ -29,18 +28,9 @@ namespace ParallelStorageAnalyzer
                 resultados = BuscarParalelo(archivos);
             }
 
-            sw.Stop(); 
+            sw.Stop();
 
-            // Mostrar tiempo
-            Console.WriteLine($"\nTiempo de ejecución ({modo}): {sw.ElapsedMilliseconds} ms");
-
-            // Resumen
-            if (resultados.Count == 0)
-                Console.WriteLine("No se encontraron duplicados.");
-            else
-                Console.WriteLine($"Total: {resultados.Count} grupo(s) de duplicados encontrados.");
-
-            return resultados;
+            return (resultados, sw.ElapsedMilliseconds);
         }
 
         private List<List<FileInfo>> BuscarSecuencial(IEnumerable<FileInfo> archivos)
@@ -61,8 +51,6 @@ namespace ParallelStorageAnalyzer
                 {
                     var lista = duplicados.ToList();
                     resultados.Add(lista);
-
-                    Console.WriteLine($"  ↳ {lista.Count} copias de: {lista[0].Name}");
                 }
             }
 
@@ -106,8 +94,6 @@ namespace ParallelStorageAnalyzer
                 foreach (var kvp in diccionario.Where(x => x.Value.Count > 1))
                 {
                     resultados.Add(kvp.Value);
-
-                    Console.WriteLine($"  ↳ {kvp.Value.Count} copias de: {kvp.Value[0].Name}");
                 }
             }
 

@@ -44,8 +44,8 @@
             return modo;
         }
         #endregion
-        #region Dashboard y Menu de Eliminación
-        // Dashboard
+        #region Dashboards y Menu de Eliminación
+        // Dashboard busqueda de archivos
         public static void MostrarDashboard(ResultadoBusqueda resultado)
         {
             Console.WriteLine($"\n{"#",-5} {"Tamaño",-12} {"Nombre",-40} {"Ruta"}");
@@ -67,6 +67,24 @@
             Console.WriteLine($"Tiempo de ejecucion: {resultado.TiempoMs / 1000}s");
             Console.WriteLine($"Modo de ejecución: {resultado.ModoNombre}");
         }
+
+        // Dashboard archivos duplicados
+        public static void MostrarDashboardDuplicados(List<List<FileInfo>> grupos, long tiempoMs, ModoEjecucion modo)
+        {
+            Console.WriteLine($"\nBúsqueda de duplicados ({modo}): {tiempoMs} ms");
+
+            if (grupos.Count == 0)
+            {
+                Console.WriteLine("No se encontraron duplicados.");
+                return;
+            }
+
+            Console.WriteLine($"Total: {grupos.Count} grupo(s) de duplicados encontrados.");
+
+            foreach (var grupo in grupos)
+                Console.WriteLine($"  ↳ {grupo.Count} copias de: {grupo[0].Name}");
+        }
+
 
         // Menu
 
@@ -193,7 +211,7 @@
                 _ => $"{bytes} B"
             };
         }
-        public static async Task MostrarSpinner(Func<Task> operacion)
+        public static async Task MostrarSpinner(Func<Task> operacion, string busqueda)
         {
             bool buscando = true;
             var animacion = Task.Run(() =>
@@ -202,7 +220,7 @@
                 int i = 0;
                 while (buscando)
                 {
-                    Console.Write($"\r[{spinner[i++ % 4]}] Buscando...");
+                    Console.Write($"\r[{spinner[i++ % 4]}] {busqueda}");
                     Thread.Sleep(100);
                 }
             });
