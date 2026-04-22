@@ -1,4 +1,5 @@
 ﻿using ParallelStorageAnalyzer;
+using ParallelStorageAnalyzer.src;
 
 
 bool continuarPrograma = true;
@@ -8,16 +9,36 @@ var detector = new DetectorDuplicados();
 
 while (continuarPrograma)
 {
+    Console.Clear();
     // Inputs
+    int nucleos = 1;
     string ruta = ConsoleUI.PedirRuta();
     long minBytes = ConsoleUI.PedirTamano();
     int modo = ConsoleUI.PedirModo();
 
-    // Busqueda con Animación
+    if (modo == 1 || modo == 3)
+    {
+        nucleos = ConsoleUI.PedirNucleos();
+    }
+
+    // Caso Metricas
+    if (modo == 3)
+    {
+        var metrics = new Metrics();
+        var (secuencial, paralelo) = await metrics.EjecutarComparacion(ruta, minBytes, nucleos);
+
+        ConsoleUI.MostrarComparativa(secuencial, paralelo);
+
+        // Vuelve al inicio del While
+        continue;
+    }
+
     ResultadoBusqueda resultado = null!;
+
+    // Busqueda con Animacion 
     await ConsoleUI.MostrarSpinner(async () =>
     {
-        await Task.Run(() => resultado = buscador.Buscar(ruta, minBytes, modo));
+        await Task.Run(() => resultado = buscador.Buscar(ruta, minBytes, modo, nucleos));
     }, "Buscando Archivos...");
 
 
@@ -34,12 +55,12 @@ while (continuarPrograma)
     ConsoleUI.MostrarDashboard(resultado);
 
 
-    // Detectar duplicados
+    // Detectar duplicados con Animacion de busqueda
     await ConsoleUI.MostrarSpinner(async () =>
     {
         await Task.Run(() =>
         {
-            detector.BuscarDuplicados(resultado);
+            detector.BuscarDuplicados(resultado, nucleos);
         });
     }, "Buscando Duplicados...");
 

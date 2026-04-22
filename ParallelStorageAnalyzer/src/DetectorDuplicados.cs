@@ -6,9 +6,10 @@ namespace ParallelStorageAnalyzer
 {
     public class DetectorDuplicados
     {
-        public void BuscarDuplicados(ResultadoBusqueda resultado)
+        private int _nucleosConfigurados;
+        public void BuscarDuplicados(ResultadoBusqueda resultado, int nucleos)
         {
-
+            _nucleosConfigurados = nucleos;
             var sw = Stopwatch.StartNew();
 
             if (resultado.Modo == 2)
@@ -62,7 +63,7 @@ namespace ParallelStorageAnalyzer
 
                 var options = new ParallelOptions
                 {
-                    MaxDegreeOfParallelism = Environment.ProcessorCount
+                    MaxDegreeOfParallelism = _nucleosConfigurados
                 };
 
                 Parallel.ForEach(grupo, options, archivo =>

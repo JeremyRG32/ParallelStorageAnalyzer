@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using ParallelStorageAnalyzer;
-
-namespace ParallelStorageAnalyzer.Tests
+﻿namespace ParallelStorageAnalyzer.Tests
 {
     public class FlujoPrincipalTests : IDisposable
     {
-        private const string RutaTest = @"C:\Users\Eidan\Desktop\TEST"; // Modificable
+        private const string RutaTest = @"D:\test"; // Modificable
+        private const long MinBytesTest = 1L * 1024 * 1024; // Modificabale
+        private const int NucleosTest = 1; // 
 
         private readonly TextReader _originalIn = Console.In;
         private readonly TextWriter _originalOut = Console.Out;
@@ -22,10 +19,10 @@ namespace ParallelStorageAnalyzer.Tests
             => new StringReader(string.Join(Environment.NewLine, respuestas));
 
         private static ResultadoBusqueda BuscarArchivosReales()
-            => new BuscadorArchivo().Buscar(RutaTest, minBytes: 0, modo: 1);
+            => new BuscadorArchivo().Buscar(RutaTest, minBytes: MinBytesTest, modo: 1, nucleos: NucleosTest);
 
-        private static List<List<FileInfo>> DetectarDuplicadosReales(ResultadoBusqueda resultado)
-            => new DetectorDuplicados().BuscarDuplicados(resultado.Archivos, ModoEjecucion.Paralelo);
+        private static void DetectarDuplicadosReales(ResultadoBusqueda resultado)
+            => new DetectorDuplicados().BuscarDuplicados(resultado, nucleos: NucleosTest);
 
         // Test 1 - Verifica que PedirRuta retorna la ruta ingresada
         [Fact]
@@ -39,15 +36,15 @@ namespace ParallelStorageAnalyzer.Tests
             Assert.Equal(RutaTest, resultado);
         }
 
-        // Test 2 - Verifica que 100 MB se convierte correctamente a bytes
+        // Test 2 - Verifica que 1 MB se convierte correctamente a bytes
         [Fact]
-        public void PedirTamano_100MB_DevuelveBytesCorrectos()
+        public void PedirTamano_1MB_DevuelveBytesCorrectos()
         {
-            Console.SetIn(BuildInput("100")); // Modificable
+            Console.SetIn(BuildInput("1")); // Modificable
 
             long resultado = ConsoleUI.PedirTamano();
 
-            Assert.Equal(100L * 1024 * 1024, resultado);
+            Assert.Equal(MinBytesTest, resultado);
         }
 
         // Test 3 - Verifica que el modo 1 (Paralelo) es retornado correctamente
@@ -91,18 +88,20 @@ namespace ParallelStorageAnalyzer.Tests
         {
             Assert.True(Directory.Exists(RutaTest), $"La carpeta '{RutaTest}' no existe.");
             var resultado = BuscarArchivosReales();
-            Assert.True(resultado.Archivos.Count >= 1, "Se necesita al menos 1 archivo en TEST.");
+            Assert.True(resultado.Archivos.Count >= 1, $"Se necesita al menos 1 archivo en {RutaTest}.");
 
-            Console.SetIn(BuildInput(RutaTest, "0", "1", "2", "1", "n"));
+            Console.SetIn(BuildInput(RutaTest, "1", "1", NucleosTest.ToString(), "2", "1", "n"));
 
             string ruta = ConsoleUI.PedirRuta();
             long minBytes = ConsoleUI.PedirTamano();
+            int nucleos = ConsoleUI.PedirNucleos();
             int modo = ConsoleUI.PedirModo();
             int opcionMenu = ConsoleUI.PedirOpcionMenu(hayDuplicados: true);
             ConsoleUI.EliminarArchivo(resultado.Archivos);
 
             Assert.Equal(RutaTest, ruta);
-            Assert.Equal(0L, minBytes);
+            Assert.Equal(MinBytesTest, minBytes);
+            Assert.Equal(NucleosTest, nucleos);
             Assert.Equal(1, modo);
             Assert.Equal(2, opcionMenu);
             Assert.Contains("Cancelado", _outputCapturado.ToString());
@@ -116,10 +115,11 @@ namespace ParallelStorageAnalyzer.Tests
             var resultado = BuscarArchivosReales();
             Assert.True(resultado.Archivos.Count >= 1, "Se necesita al menos 1 archivo en TEST.");
 
-            Console.SetIn(BuildInput(RutaTest, "0", "1", "2", "1", "s"));
+            Console.SetIn(BuildInput(RutaTest, "0", "1", NucleosTest.ToString(), "2", "1", "s"));
 
             string ruta = ConsoleUI.PedirRuta();
             long minBytes = ConsoleUI.PedirTamano();
+            int nucleos = ConsoleUI.PedirNucleos();
             int modo = ConsoleUI.PedirModo();
             int opcion = ConsoleUI.PedirOpcionMenu(hayDuplicados: true);
 
@@ -127,6 +127,7 @@ namespace ParallelStorageAnalyzer.Tests
             ConsoleUI.EliminarArchivo(resultado.Archivos);
 
             Assert.Equal(RutaTest, ruta);
+            Assert.Equal(NucleosTest, nucleos);
             Assert.Equal(1, modo);
             Assert.Equal(2, opcion);
             Assert.Equal(conteoAntes - 1, resultado.Archivos.Count);
@@ -138,17 +139,12 @@ namespace ParallelStorageAnalyzer.Tests
         public void FlujoCompleto_EliminarArchivo_LuegoEliminarDuplicados()
         {
             Assert.True(Directory.Exists(RutaTest), $"La carpeta '{RutaTest}' no existe.");
+
             var resultado = BuscarArchivosReales();
-            var duplicados = DetectarDuplicadosReales(resultado);
+            Assert.True(resultado.Archivos.Count >= 1,
+                $"Se necesita al menos 1 archivo >= 1 MB en {RutaTest}.");
 
-            Assert.True(resultado.Archivos.Count >= 1, "Se necesita al menos 1 archivo en TEST.");
-            Assert.True(duplicados.Count > 0,
-                $"No hay duplicados en '{RutaTest}'. Copia cualquier archivo dentro de TEST.");
-
-            var inputs = new List<string> { "2", "1", "s", "3" };
-            foreach (var _ in duplicados)
-                inputs.Add("s");
-
+            var inputs = new List<string> { "2", "1", "s" };
             Console.SetIn(BuildInput(inputs.ToArray()));
 
             int opcion1 = ConsoleUI.PedirOpcionMenu(hayDuplicados: true);
@@ -157,6 +153,18 @@ namespace ParallelStorageAnalyzer.Tests
             int conteoAntes = resultado.Archivos.Count;
             ConsoleUI.EliminarArchivo(resultado.Archivos);
             Assert.Equal(conteoAntes - 1, resultado.Archivos.Count);
+
+            new DetectorDuplicados().BuscarDuplicados(resultado, nucleos: NucleosTest);
+            var duplicados = resultado.Duplicados;
+
+            Assert.True(duplicados.Count > 0,
+                $"No hay duplicados en '{RutaTest}'. Copia cualquier archivo >= 1 MB dentro de {RutaTest}.");
+
+            var inputs2 = new List<string> { "3" };
+            foreach (var _ in duplicados)
+                inputs2.Add("s");
+
+            Console.SetIn(BuildInput(inputs2.ToArray()));
 
             int opcion2 = ConsoleUI.PedirOpcionMenu(hayDuplicados: true);
             Assert.Equal(3, opcion2);
