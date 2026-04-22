@@ -4,43 +4,25 @@ using System.Security.Cryptography;
 
 namespace ParallelStorageAnalyzer
 {
-    public enum ModoEjecucion
-    {
-        Secuencial,
-        Paralelo
-    }
-
     public class DetectorDuplicados
     {
-        public List<List<FileInfo>> BuscarDuplicados(IEnumerable<FileInfo> archivos, ModoEjecucion modo)
+        private int _nucleosConfigurados;
+        public void BuscarDuplicados(ResultadoBusqueda resultado, int nucleos)
         {
-            Console.WriteLine("\nBuscando archivos duplicados...");
+            _nucleosConfigurados = nucleos;
+            var sw = Stopwatch.StartNew();
 
-            var sw = Stopwatch.StartNew(); 
-
-            List<List<FileInfo>> resultados;
-
-            if (modo == ModoEjecucion.Secuencial)
+            if (resultado.Modo == 2)
             {
-                resultados = BuscarSecuencial(archivos);
+                resultado.Duplicados = BuscarSecuencial(resultado.Archivos);
             }
             else
             {
-                resultados = BuscarParalelo(archivos);
+                resultado.Duplicados = BuscarParalelo(resultado.Archivos);
             }
 
-            sw.Stop(); 
-
-            // Mostrar tiempo
-            Console.WriteLine($"\nTiempo de ejecución ({modo}): {sw.ElapsedMilliseconds} ms");
-
-            // Resumen
-            if (resultados.Count == 0)
-                Console.WriteLine("No se encontraron duplicados.");
-            else
-                Console.WriteLine($"Total: {resultados.Count} grupo(s) de duplicados encontrados.");
-
-            return resultados;
+            sw.Stop();
+            resultado.TiempoMs += sw.ElapsedMilliseconds;
         }
 
         private List<List<FileInfo>> BuscarSecuencial(IEnumerable<FileInfo> archivos)
@@ -55,14 +37,12 @@ namespace ParallelStorageAnalyzer
             {
                 var gruposPorHash = grupo
                     .GroupBy(a => ObtenerHash(a))
-                    .Where(g => g.Count() > 1);
+                    .Where(g => !string.IsNullOrEmpty(g.Key) && g.Count() > 1);
 
                 foreach (var duplicados in gruposPorHash)
                 {
                     var lista = duplicados.ToList();
                     resultados.Add(lista);
-
-                    Console.WriteLine($"  ↳ {lista.Count} copias de: {lista[0].Name}");
                 }
             }
 
@@ -83,14 +63,16 @@ namespace ParallelStorageAnalyzer
 
                 var options = new ParallelOptions
                 {
-                    MaxDegreeOfParallelism = Environment.ProcessorCount
+                    MaxDegreeOfParallelism = _nucleosConfigurados
                 };
 
                 Parallel.ForEach(grupo, options, archivo =>
                 {
                     string hash = ObtenerHash(archivo);
 
-                    diccionario.AddOrUpdate(
+                    if (!string.IsNullOrEmpty(hash))
+                    {
+                        diccionario.AddOrUpdate(
                         hash,
                         new List<FileInfo> { archivo },
                         (key, listaExistente) =>
@@ -101,13 +83,12 @@ namespace ParallelStorageAnalyzer
                             }
                             return listaExistente;
                         });
+                    }
                 });
 
                 foreach (var kvp in diccionario.Where(x => x.Value.Count > 1))
                 {
                     resultados.Add(kvp.Value);
-
-                    Console.WriteLine($"  ↳ {kvp.Value.Count} copias de: {kvp.Value[0].Name}");
                 }
             }
 
@@ -116,10 +97,24 @@ namespace ParallelStorageAnalyzer
 
         private static string ObtenerHash(FileInfo archivo)
         {
-            using var sha256 = SHA256.Create();
-            using var stream = archivo.OpenRead();
-            byte[] hash = sha256.ComputeHash(stream);
-            return BitConverter.ToString(hash);
+            try
+            {
+                using var sha256 = SHA256.Create();
+                using var stream = archivo.OpenRead();
+                byte[] hash = sha256.ComputeHash(stream);
+                return BitConverter.ToString(hash);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.WriteLine($"\n[Acceso denegado]: {archivo.FullName}\n");
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"\n[Error inesperado]: {ex.Message}\n");
+                return string.Empty;
+            }
+
         }
     }
 }

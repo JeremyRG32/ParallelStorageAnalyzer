@@ -33,21 +33,38 @@
                     Console.WriteLine("Error: Ingrese un número entero positivo.\n");
             }
         }
+        public static int PedirNucleos()
+        {
+            while (true)
+            {
+                Console.Write($"Ingrese la cantidad de nucleos a usar (Maximo {Environment.ProcessorCount}): ");
+                if (int.TryParse(Console.ReadLine(), out int nucleos))
+                {
+                    if (nucleos >= 1 && nucleos <= Environment.ProcessorCount)
+                    {
+                        return nucleos;
+                    }
+                }
+                else
+                    Console.WriteLine($"Error: Ingrese un número entre 1 y {Environment.ProcessorCount}.\n");
+            }
+        }
         public static int PedirModo()
         {
             int modo = 0;
-            while (modo != 1 && modo != 2)
+            while (modo != 1 && modo != 2 && modo != 3)
             {
-                Console.WriteLine("\nSeleccione el modo de busqueda \n 1. Paralelo \n 2. Secuencial\n");
+                Console.WriteLine("\nSeleccione el modo de busqueda \n 1. Paralelo \n 2. Secuencial\n 3. Comparativa de ambos modos\n");
                 int.TryParse(Console.ReadLine(), out modo);
             }
             return modo;
         }
         #endregion
-        #region Dashboard y Menu de Eliminación
-        // Dashboard
+        #region Dashboards y Menu de Eliminación
+        // Dashboard busqueda de archivos
         public static void MostrarDashboard(ResultadoBusqueda resultado)
         {
+            Console.Clear();
             Console.WriteLine($"\n{"#",-5} {"Tamaño",-12} {"Nombre",-40} {"Ruta"}");
             Console.WriteLine(new string('─', 110));
 
@@ -64,8 +81,56 @@
             }
 
             Console.WriteLine(new string('─', 110));
-            Console.WriteLine($"Tiempo de ejecucion: {resultado.TiempoMs / 1000}s");
-            Console.WriteLine($"Modo de ejecución: {resultado.ModoNombre}");
+        }
+
+        // Dashboard archivos duplicados
+        public static void MostrarDashboardDuplicados(ResultadoBusqueda resultado)
+        {
+            if (resultado.Duplicados.Count == 0)
+            {
+                Console.WriteLine("No se encontraron duplicados.");
+                return;
+            }
+
+            Console.WriteLine($"Total: {resultado.Duplicados.Count} grupo(s) de duplicados encontrados.");
+
+            foreach (var grupo in resultado.Duplicados)
+                Console.WriteLine($"  ↳ {grupo.Count} copias de: {grupo[0].Name}");
+
+            Console.WriteLine($"\n\nTiempo de ejecucion ({resultado.ModoNombre}): {resultado.TiempoMs}ms");
+            Console.WriteLine($"Nucleos Utilizados: {resultado.Nucleos}");
+        }
+        // Dashboard Metrics
+        public static void MostrarComparativa(ResultadoBusqueda secuencial, ResultadoBusqueda paralelo)
+        {
+            // Cálculos de métricas
+            double speedup = (double)secuencial.TiempoMs / paralelo.TiempoMs;
+            double eficiencia = (speedup / paralelo.Nucleos) * 100;
+
+            Console.Clear();
+            Console.WriteLine("╔══════════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║                 COMPARATIVA DE MÉTRICAS (I/O)                ║");
+            Console.WriteLine("╠══════════════════════════════════════════════════════════════╣");
+            Console.WriteLine("║  Métrica                Secuencial           Paralelo        ║");
+            Console.WriteLine("╠══════════════════════════════════════════════════════════════╣");
+
+            Console.WriteLine($"║  Tiempo Total (ms)   {secuencial.TiempoMs,15} ms {paralelo.TiempoMs,15} ms   ║");
+
+            Console.WriteLine($"║  Archivos Procesados {secuencial.Archivos.Count,18} {paralelo.Archivos.Count,18}   ║");
+
+            Console.WriteLine($"║  Grupos Duplicados   {secuencial.Duplicados.Count,18} {paralelo.Duplicados.Count,18}   ║");
+
+            Console.WriteLine($"║  Núcleos Utilizados  {1,18} {paralelo.Nucleos,18}   ║");
+
+            Console.WriteLine("╠══════════════════════════════════════════════════════════════╣");
+
+            Console.WriteLine($"║  Speedup Logrado     {" ",20} {speedup,15:F2}x   ║");
+            Console.WriteLine($"║  Eficiencia Real     {" ",20} {eficiencia,15:F1}%   ║");
+
+            Console.WriteLine("╚══════════════════════════════════════════════════════════════╝");
+
+            Console.WriteLine("\nPresione cualquier tecla para continuar...");
+            Console.ReadKey();
         }
 
         // Menu
@@ -193,7 +258,7 @@
                 _ => $"{bytes} B"
             };
         }
-        public static async Task MostrarSpinner(Func<Task> operacion)
+        public static async Task MostrarSpinner(Func<Task> operacion, string busqueda)
         {
             bool buscando = true;
             var animacion = Task.Run(() =>
@@ -202,7 +267,7 @@
                 int i = 0;
                 while (buscando)
                 {
-                    Console.Write($"\r[{spinner[i++ % 4]}] Buscando...");
+                    Console.Write($"\r[{spinner[i++ % 4]}] {busqueda}");
                     Thread.Sleep(100);
                 }
             });
