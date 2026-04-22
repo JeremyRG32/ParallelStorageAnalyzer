@@ -4,7 +4,7 @@
     {
         private const string RutaTest = @"D:\test"; // Modificable
         private const long MinBytesTest = 1L * 1024 * 1024; // Modificabale
-        private const int NucleosTest = 4; // Modificable
+        private const int NucleosTest = 1; // 
 
         private readonly TextReader _originalIn = Console.In;
         private readonly TextWriter _originalOut = Console.Out;
@@ -90,7 +90,7 @@
             var resultado = BuscarArchivosReales();
             Assert.True(resultado.Archivos.Count >= 1, $"Se necesita al menos 1 archivo en {RutaTest}.");
 
-            Console.SetIn(BuildInput(RutaTest, "1", "1", "2", "1", "n"));
+            Console.SetIn(BuildInput(RutaTest, "1", "1", NucleosTest.ToString(), "2", "1", "n"));
 
             string ruta = ConsoleUI.PedirRuta();
             long minBytes = ConsoleUI.PedirTamano();
@@ -115,7 +115,7 @@
             var resultado = BuscarArchivosReales();
             Assert.True(resultado.Archivos.Count >= 1, "Se necesita al menos 1 archivo en TEST.");
 
-            Console.SetIn(BuildInput(RutaTest, "0", "1", "2", "1", "s"));
+            Console.SetIn(BuildInput(RutaTest, "0", "1", NucleosTest.ToString(), "2", "1", "s"));
 
             string ruta = ConsoleUI.PedirRuta();
             long minBytes = ConsoleUI.PedirTamano();

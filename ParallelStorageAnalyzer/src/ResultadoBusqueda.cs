@@ -9,4 +9,6 @@
         public int Modo { get; set; } // 1 = Paralelo, 2 = Secuencial
         public string ModoNombre => Modo == 1 ? "Paralelo" : "Secuencial";
     }
+
+
 }
