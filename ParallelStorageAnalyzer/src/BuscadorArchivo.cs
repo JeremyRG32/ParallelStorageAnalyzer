@@ -7,9 +7,12 @@ namespace ParallelStorageAnalyzer
     {
         private ConcurrentBag<FileInfo> _archivos { get; } = new ConcurrentBag<FileInfo>();
 
-        public ResultadoBusqueda Buscar(string ruta, long minBytes, int modo)
+        private int _nucleosConfigurados;
+        public ResultadoBusqueda Buscar(string ruta, long minBytes, int modo, int nucleos)
         {
             _archivos.Clear(); // limpiar antes de cada búsqueda
+
+            _nucleosConfigurados = nucleos;
 
             var sw = Stopwatch.StartNew();
 
@@ -28,7 +31,8 @@ namespace ParallelStorageAnalyzer
             {
                 Archivos = _archivos.OrderByDescending(f => f.Length).ToList(),
                 TiempoMs = sw.ElapsedMilliseconds,
-                Modo = modo
+                Modo = modo,
+                Nucleos = nucleos
             };
         }
 
@@ -79,7 +83,7 @@ namespace ParallelStorageAnalyzer
                 //  Subcarpetas en paralelo
                 var options = new ParallelOptions
                 {
-                    MaxDegreeOfParallelism = Environment.ProcessorCount
+                    MaxDegreeOfParallelism = _nucleosConfigurados
                 };
 
                 Parallel.ForEach(directoryInfo.GetDirectories(), options, subCarpeta =>

@@ -33,6 +33,22 @@
                     Console.WriteLine("Error: Ingrese un número entero positivo.\n");
             }
         }
+        public static int PedirNucleos()
+        {
+            while (true)
+            {
+                Console.Write($"Ingrese la cantidad de nucleos a usar (Maximo {Environment.ProcessorCount}): ");
+                if (int.TryParse(Console.ReadLine(), out int nucleos))
+                {
+                    if (nucleos >= 1 && nucleos <= Environment.ProcessorCount)
+                    {
+                        return nucleos;
+                    }
+                }
+                else
+                    Console.WriteLine($"Error: Ingrese un número entre 1 y {Environment.ProcessorCount}.\n");
+            }
+        }
         public static int PedirModo()
         {
             int modo = 0;
@@ -81,6 +97,7 @@
                 Console.WriteLine($"  ↳ {grupo.Count} copias de: {grupo[0].Name}");
 
             Console.WriteLine($"\n\nTiempo de ejecucion ({resultado.ModoNombre}): {resultado.TiempoMs}ms");
+            Console.WriteLine($"Nucleos Utilizados: {resultado.Nucleos}");
         }
 
 

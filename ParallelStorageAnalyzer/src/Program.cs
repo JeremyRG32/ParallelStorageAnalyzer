@@ -11,13 +11,16 @@ while (continuarPrograma)
     // Inputs
     string ruta = ConsoleUI.PedirRuta();
     long minBytes = ConsoleUI.PedirTamano();
+    int nucleos = ConsoleUI.PedirNucleos();
     int modo = ConsoleUI.PedirModo();
 
-    // Busqueda con Animación
+
     ResultadoBusqueda resultado = null!;
+
+    // Busqueda con Animacion 
     await ConsoleUI.MostrarSpinner(async () =>
     {
-        await Task.Run(() => resultado = buscador.Buscar(ruta, minBytes, modo));
+        await Task.Run(() => resultado = buscador.Buscar(ruta, minBytes, modo, nucleos));
     }, "Buscando Archivos...");
 
 
@@ -34,12 +37,12 @@ while (continuarPrograma)
     ConsoleUI.MostrarDashboard(resultado);
 
 
-    // Detectar duplicados
+    // Detectar duplicados con Animacion de busqueda
     await ConsoleUI.MostrarSpinner(async () =>
     {
         await Task.Run(() =>
         {
-            detector.BuscarDuplicados(resultado);
+            detector.BuscarDuplicados(resultado, nucleos);
         });
     }, "Buscando Duplicados...");
 
